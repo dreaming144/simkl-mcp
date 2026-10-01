@@ -1,0 +1,11 @@
+{
+  "name": "simkl-mcp",
+  "version": "0.1.2",
+  "private": true,
+  "type": "module",
+  "description": "Zero-dependency stdio MCP server for the Simkl API (AUTH V2, rate limits first-class)",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  }
+}

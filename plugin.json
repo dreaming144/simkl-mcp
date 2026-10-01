@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "simkl-mcp",
+  "version": "0.1.2",
+  "description": "Simkl AUTH V2 API: sync library, search, catalog, ratings. Rate limits are first-class (pacing + classify + status tool).",
+  "author": {
+    "name": "Chris R"
+  },
+  "license": "MIT",
+  "homepage": "https://api.simkl.org",
+  "keywords": [
+    "simkl",
+    "anime",
+    "movies",
+    "tv",
+    "sync",
+    "mcp",
+    "oauth2",
+    "rate-limits"
+  ]
+}
