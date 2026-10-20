@@ -2177,17 +2177,6 @@ function buildLibraryWrite(toolName, args) {
   return { method: spec.method, path: spec.path, body, query, count, preview, hashInput: { body, query } };
 }
 
-function describeScrobbleTarget(args = {}) {
-  const media = args.movie || args.show || args.anime;
-  if (!isPlainObject(media)) return "unknown title";
-  if (media.title) return trunc(media.title, 80);
-  const ids = isPlainObject(media.ids) ? media.ids : {};
-  for (const k of ["simkl", "imdb", "tmdb", "mal", "anidb", "tvdb", "anilist"]) {
-    if (ids[k] != null && ids[k] !== "") return `${k}:${trunc(ids[k], 40)}`;
-  }
-  return "unknown title";
-}
-
 function buildScrobble(toolName, args) {
   const action = toolName.replace("simkl_scrobble_", "");
   const kinds = ["movie", "show", "anime"].filter((k) => args[k] !== undefined && args[k] !== null);
