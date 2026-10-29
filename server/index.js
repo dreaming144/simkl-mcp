@@ -725,7 +725,6 @@ async function refreshAccessToken() {
  * @param {boolean} [opts.rateExempt] — skip pacing/quota tracking
  * @param {'user'|'app'|null} [opts.debugLimit]
  * @param {boolean} [opts.allowRefresh] — try refresh on 401
- * @param {boolean} [opts.followRedirect] — for /redirect
  */
 async function simklRequest(method, pathOrUrl, opts = {}) {
   const {
@@ -737,8 +736,6 @@ async function simklRequest(method, pathOrUrl, opts = {}) {
     rateExempt: rateExemptOpt,
     debugLimit = null,
     allowRefresh = true,
-    followRedirect = false,
-    maxRedirects = 5,
   } = opts;
 
   const cid = requireClientId();
@@ -825,31 +822,6 @@ async function simklRequest(method, pathOrUrl, opts = {}) {
       updateLimitHeaders(result.headers);
     }
 
-    // Optional redirect follow (for /redirect Location)
-    if (
-      followRedirect &&
-      (result.status === 301 || result.status === 302 || result.status === 303 || result.status === 307 || result.status === 308) &&
-      result.location &&
-      maxRedirects > 0
-    ) {
-      const next = new URL(result.location, url);
-      // Return location metadata rather than chasing onto simkl.com HTML by default
-      // Caller can set followRedirectBody to actually GET the next URL.
-      if (opts.followRedirectBody) {
-        return simklRequest("GET", next.toString(), {
-          ...opts,
-          followRedirect: true,
-          maxRedirects: maxRedirects - 1,
-          requireAuth: false,
-          forceNoAuth: isCatalogNoAuthPath(next.pathname) || isCdnHost(next.hostname),
-        });
-      }
-      return {
-        ...result,
-        redirectLocation: result.location,
-      };
-    }
-
     let classified = classifySimklResponse(result.status, result.body, result.headers);
     limitState.lastKind = classified.kind;
     limitState.lastError = classified.error;
@@ -933,7 +905,6 @@ function httpErrorResult(result) {
     classified: result.classified || null,
     rateLimit: rateLimitStatusPayload(),
   };
-  if (result.redirectLocation) payload.redirectLocation = result.redirectLocation;
   if (result.location) payload.location = result.location;
   return toolResult(payload, { isError: true });
 }
@@ -944,14 +915,11 @@ async function callApi(method, path, opts = {}) {
     if (result.status === 204) {
       return toolResult({ ok: true, status: 204 });
     }
-    // Redirect success for /redirect when not following body
-    if (
-      (result.status === 301 || result.status === 302) &&
-      (result.redirectLocation || result.location)
-    ) {
+    // 301/302 is a successful resolve: return the Location header. The target is not fetched.
+    if ((result.status === 301 || result.status === 302) && result.location) {
       return toolResult({
         status: result.status,
-        location: result.redirectLocation || result.location,
+        location: result.location,
         body: result.body,
       });
     }
@@ -2565,7 +2533,6 @@ async function dispatchTool(name, args) {
       return callApi("GET", "/redirect", {
         requireAuth: true,
         rateExempt: true,
-        followRedirect: false,
         query,
         debugLimit,
       });
@@ -2737,7 +2704,6 @@ async function dispatchTool(name, args) {
         `/users/recently-watched-background/${positiveInt("user_id", args.user_id)}`,
         {
           requireAuth: true,
-          followRedirect: false,
           query,
           debugLimit,
         }
