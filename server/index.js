@@ -768,13 +768,7 @@ async function simklRequest(method, pathOrUrl, opts = {}) {
     const noAuth = forceNoAuth || isCatalogNoAuthPath(url.pathname) || isCdnHost(url.hostname);
     if (!noAuth && requireAuth) {
       headers.Authorization = `Bearer ${requireAccessToken()}`;
-    } else if (!noAuth && accessToken() && requireAuth !== false && opts.sendAuthIfPresent) {
-      headers.Authorization = `Bearer ${accessToken()}`;
     }
-
-    // When requireAuth is true we already attached. When false explicitly and not forceNoAuth,
-    // still omit Auth unless caller asked sendAuthIfPresent.
-    // Catalog paths: never Auth.
 
     if (!exempt && dailyStopActive()) {
       const info = rateLimitStatusPayload();
